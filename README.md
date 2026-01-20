@@ -1,0 +1,1 @@
+Projeto e exercícioes utilizando FastAPI.
