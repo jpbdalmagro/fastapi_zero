@@ -1,5 +1,5 @@
 [project]
-name = "fast-zero"
+name = "fastapi_zero"
 version = "0.1.0"
 description = ""
 authors = [
@@ -25,6 +25,9 @@ dev = [
     "typos (>=1.46.3,<2.0.0)"
 ]
 
+[tool.poetry]
+package-mode = false
+
 [tool.ruff]
 line-length = 79
 extend-exclude = ['migrations']
@@ -45,7 +48,7 @@ addopts = ['-p', 'no:warnings']
 lint = 'ruff check'
 pre_format = 'ruff check --fix'
 format = 'ruff format'
-run = 'fastapi dev fast_zero/app.py'
+run = 'fastapi dev fastapi_zero/app.py'
 pre_test = 'task lint'
 test = 'pytest -s -x --cov=fast_zero -vv'
 post_test = 'coverage html'
