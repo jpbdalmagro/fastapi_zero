@@ -39,11 +39,41 @@ def read_users():
 
 @app.put('/users/{user_id}', response_model=UserPublicSchema)
 def update_user(user_id: int, user: UserSchema):
-    if not 0 < user_id < len(database):
-        raise H
-    
+    if user_id < 0 or user_id > len(database):
+        raise HTTPException(
+            status_code=HTTPStatus.NOT_FOUND, detail='Não achei padrinho'
+        )
+
     user_with_id = UserDB(id=user_id, **user.model_dump())
 
     database[user_id - 1] = user_with_id
 
     return user_with_id
+
+
+@app.delete(
+    '/users/{user_id}', status_code=HTTPStatus.OK, response_model=Message
+)
+def delete_user(user_id: int):
+    if user_id < 0 or user_id > len(database):
+        raise HTTPException(
+            status_code=HTTPStatus.NOT_FOUND, detail='Não achei padrinho'
+        )
+
+    del database[user_id - 1]
+
+    return {'message': 'Foi jogar no Vasco'}
+
+
+@app.get(
+    '/users/{user_id}',
+    status_code=HTTPStatus.OK,
+    response_model=UserPublicSchema,
+)
+def get_user_by_id(user_id: int):
+    if user_id < 0 or user_id > len(database):
+        raise HTTPException(
+            status_code=HTTPStatus.NOT_FOUND, detail='Não achei padrinho'
+        )
+
+    return database[user_id - 1]

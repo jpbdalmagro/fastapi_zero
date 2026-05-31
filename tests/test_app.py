@@ -51,3 +51,47 @@ def test_update_user(client):
         'email': '123@teste.com',
         'id': 1,
     }
+
+
+def test_update_user_error(client):
+    response = client.put(
+        '/users/2',
+        json={
+            'password': 'senha',
+            'username': 'username',
+            'email': '123@teste.com',
+            'id': 2,
+        },
+    )
+
+    assert response.status_code == HTTPStatus.NOT_FOUND
+
+
+def test_get_user_with_id(client):
+    response = client.get('/users/1')
+
+    assert response.status_code == HTTPStatus.OK
+    assert response.json() == {
+        'username': 'username',
+        'email': '123@teste.com',
+        'id': 1,
+    }
+
+
+def test_get_user_with_id_error(client):
+    response = client.get('/users/2')
+
+    assert response.status_code == HTTPStatus.NOT_FOUND
+
+
+def test_user_delete(client):
+    response = client.delete('/users/1')
+
+    assert response.status_code == HTTPStatus.OK
+    assert response.json() == {'message': 'Foi jogar no Vasco'}
+
+
+def test_user_delete_error(client):
+    response = client.delete('/users/2')
+
+    assert response.status_code == HTTPStatus.NOT_FOUND
