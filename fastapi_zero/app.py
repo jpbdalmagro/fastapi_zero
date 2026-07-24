@@ -1,7 +1,10 @@
 from http import HTTPStatus
 
-from fastapi import FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException
+from sqlalchemy import select
 
+from fastapi_zero.database import get_session
+from fastapi_zero.models import User
 from fastapi_zero.schemas import (
     Message,
     UserDB,
@@ -23,18 +26,40 @@ def read_root():
 @app.post(
     '/users/', status_code=HTTPStatus.CREATED, response_model=UserPublicSchema
 )
-def create_user(user: UserSchema):
+def create_user(user: UserSchema, session=Depends(get_session)):
 
-    user_with_id = UserDB(id=len(database) + 1, **user.model_dump())
+    db_user = session.scalar(
+        select(User).where(
+            (User.username == user.username) | (User.email == user.email)
+        )
+    )
 
-    database.append(user_with_id)
+    if db_user:
+        if db_user.username == user.username:
+            raise HTTPException(
+                detail='Username already exists',
+                status_code=HTTPStatus.CONFLICT,
+            )
+        else:
+            raise HTTPException(
+                detail='Email already exists', status_code=HTTPStatus.CONFLICT
+            )
 
-    return user_with_id
+    db_user = User(
+        username=user.username, email=user.email, password=user.password
+    )
+
+    session.add(db_user)
+    session.commit()
+    session.refresh(db_user)
+
+    return db_user
 
 
 @app.get('/users/', status_code=HTTPStatus.OK, response_model=UserList)
-def read_users():
-    return {'users': database}
+def read_users(limit=10, offset=0, session=Depends(get_session)):
+    users = session.scalars(select(User).limit(limit).offset(offset))
+    return {'users': users}
 
 
 @app.put('/users/{user_id}', response_model=UserPublicSchema)
