@@ -6,7 +6,7 @@ from sqlalchemy.pool import StaticPool
 
 from fastapi_zero.app import app
 from fastapi_zero.database import get_session
-from fastapi_zero.models import table_registry, User
+from fastapi_zero.models import User, table_registry
 
 
 @pytest.fixture
@@ -34,16 +34,19 @@ def session():
         yield session
 
     table_registry.metadata.drop_all(engine)
+    engine.dispose()
+
 
 # @pytest.fixture
 # def mock_db_time():
 # return _mock_db_time
 
+
 @pytest.fixture
 def user(session):
-    user = User(username='Teste', email='teste@teste', password='teste')
+    user = User(username='username', email='123@teste.com', password='teste')
     session.add(user)
     session.commit()
     session.refresh(user)
-    
+
     return user

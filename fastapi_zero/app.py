@@ -7,15 +7,12 @@ from fastapi_zero.database import get_session
 from fastapi_zero.models import User
 from fastapi_zero.schemas import (
     Message,
-    UserDB,
     UserList,
     UserPublicSchema,
     UserSchema,
 )
 
 app = FastAPI()
-
-database = []
 
 
 @app.get('/', response_model=Message)
@@ -63,29 +60,38 @@ def read_users(limit=10, offset=0, session=Depends(get_session)):
 
 
 @app.put('/users/{user_id}', response_model=UserPublicSchema)
-def update_user(user_id: int, user: UserSchema):
-    if user_id < 0 or user_id > len(database):
+def update_user(user_id: int, user: UserSchema, session=Depends(get_session)):
+    user_db = session.scalar(select(User).where(User.id == user_id))
+
+    if not user_db:
         raise HTTPException(
-            status_code=HTTPStatus.NOT_FOUND, detail='Não achei padrinho'
+            detail='User not found', status_code=HTTPStatus.NOT_FOUND
         )
 
-    user_with_id = UserDB(id=user_id, **user.model_dump())
+    user_db.email = user.email
+    user_db.username = user.username
+    user_db.password = user.password
 
-    database[user_id - 1] = user_with_id
+    session.add(user_db)
+    session.commit()
+    session.refresh(user_db)
 
-    return user_with_id
+    return user_db
 
 
 @app.delete(
     '/users/{user_id}', status_code=HTTPStatus.OK, response_model=Message
 )
-def delete_user(user_id: int):
-    if user_id < 0 or user_id > len(database):
+def delete_user(user_id: int, session=Depends(get_session)):
+    user_db = session.scalar(select(User).where(User.id == user_id))
+
+    if not user_db:
         raise HTTPException(
-            status_code=HTTPStatus.NOT_FOUND, detail='Não achei padrinho'
+            detail='User not found', status_code=HTTPStatus.NOT_FOUND
         )
 
-    del database[user_id - 1]
+    session.delete(user_db)
+    session.commit()
 
     return {'message': 'Foi jogar no Vasco'}
 
@@ -95,10 +101,12 @@ def delete_user(user_id: int):
     status_code=HTTPStatus.OK,
     response_model=UserPublicSchema,
 )
-def get_user_by_id(user_id: int):
-    if user_id < 0 or user_id > len(database):
+def get_user_by_id(user_id: int, session=Depends(get_session)):
+    user_db = session.scalar(select(User).where(User.id == user_id))
+
+    if not user_db:
         raise HTTPException(
             status_code=HTTPStatus.NOT_FOUND, detail='Não achei padrinho'
         )
 
-    return database[user_id - 1]
+    return user_db
