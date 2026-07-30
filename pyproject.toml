@@ -51,6 +51,7 @@ run = 'fastapi dev fastapi_zero/app.py'
 pre_test = 'task lint'
 test = 'pytest -s -x --cov=fast_zero -vv'
 post_test = 'coverage html'
+no_test = 'pytest --cov=fastapi_zero --cov-report=term-missing'
 
 [tool.typos.files]
 extend-exclude = ["*.md"]

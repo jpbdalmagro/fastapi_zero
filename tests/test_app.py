@@ -28,6 +28,32 @@ def test_create_user(client):
     }
 
 
+def test_create_user_username_error(client, user):
+    response = client.post(
+        '/users/',
+        json={
+            'username': 'username',
+            'email': 'teste@teste.com',
+            'password': 'senha',
+        },
+    )
+
+    assert response.status_code == HTTPStatus.CONFLICT
+
+
+def test_create_user_email_error(client, user):
+    response = client.post(
+        '/users/',
+        json={
+            'username': 'user2',
+            'email': '123@teste.com',
+            'password': 'senha',
+        },
+    )
+
+    assert response.status_code == HTTPStatus.CONFLICT
+
+
 def test_read_users(client):
     response = client.get('/users/')
 
@@ -102,3 +128,26 @@ def test_get_user_with_id_error(client):
     response = client.get('/users/2')
 
     assert response.status_code == HTTPStatus.NOT_FOUND
+
+
+def test_update_integrity_error(client, user):
+    client.post(
+        '/users/',
+        json={
+            'username': 'cleber',
+            'email': 'clebin@email.com',
+            'password': 'senhadocleber'
+        }
+    )
+
+    response = client.put(
+        f'/users/{user.id}',
+        json={
+            'username': 'cleber',
+            'email': '123@email.com',
+            'password': 'senhanova'
+        }
+    )
+
+    assert response.status_code == HTTPStatus.CONFLICT
+    assert response.json() == {'detail': 'Username or email already exists.'}
